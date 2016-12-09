@@ -1,0 +1,10 @@
+# Library/Header checks.
+
+# pthread - for multithreading.
+find_library(PTHREAD_LIB pthread)
+if (PTHREAD_LIB_NOTFOUND)
+    MESSAGE(FATAL_ERROR "pthread library NOT found.")
+else()
+    MESSAGE(STATUS "pthread library found.")
+endif()
+# No need to check for pthread header since this is part of the c++ standard.
