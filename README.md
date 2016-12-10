@@ -8,10 +8,12 @@ Sparse distributed memory, aka Kanerva Coding.
 * cmake 2.8.9 or greater.
 * gmp-6.1.1
 * lzip
+* m4
 
 ### Installation:
 ```bash
 sudo apt-get install lzip  # Needed by the tar --lzip
+sudo apt-get install m4
 
 # Install GNU MultiPrecision (GMP).
 wget https://gmplib.org/download/gmp/gmp-6.1.1.tar.lz -P /tmp

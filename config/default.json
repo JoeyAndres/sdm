@@ -11,18 +11,21 @@
           "openssh-server",
           "git",
           "make",
-          "cmake"
+          "cmake",
+          "m4"
         ],
 
         "ubuntu": {
           "dependencies": [
-            "g++"
+            "g++",
+            "lzip"
           ]
         },
 
         "centos": {
           "dependencies": [
-            "gcc-c++"
+            "gcc-c++",
+            "wget"
           ]
         }
       }

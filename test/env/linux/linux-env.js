@@ -33,6 +33,12 @@ export default class linuxEnv extends envInterface {
             this.getDockerFileDir()
         ]);
 
+        spawnSync('cp', [
+            '-rf',
+            `${__dirname}/common/dependencies.sh`,
+            this.getDockerFileDir()
+        ]);
+
         this._buildDockerImage();
         this._pushDockerImage();
     }
