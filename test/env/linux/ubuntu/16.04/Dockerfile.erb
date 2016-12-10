@@ -7,6 +7,9 @@ RUN apt update
 RUN apt install -y <%- dependency %>
 <% }); %>
 
+COPY dependencies.sh /tmp/
+RUN /bin/bash -c /tmp/dependencies.sh
+
 RUN useradd -ms /bin/bash tester
 
 USER tester
