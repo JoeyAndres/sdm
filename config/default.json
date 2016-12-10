@@ -11,7 +11,9 @@
           "openssh-server",
           "git",
           "make",
-          "cmake"
+          "cmake",
+          "lzip",
+          "m4"
         ],
 
         "ubuntu": {
