@@ -30,8 +30,8 @@ SCENARIO("Address register converts location addresses to hard location",
          "[sdm::AddressRegister]") {
   GIVEN("Instantiate 256 bit to 2000 location addresses.") {
     constexpr size_t hardLocationBitCount = 11;
-    sdm::AddressRegister<256, hardLocationBitCount> addressRegister;
     constexpr size_t hardLocationCount = std::exp2(hardLocationBitCount);
+    sdm::AddressRegister<256, hardLocationBitCount> addressRegister;
 
     WHEN("I accessed the location addresses.") {
       array<mpz_class, hardLocationCount> locationAddress;

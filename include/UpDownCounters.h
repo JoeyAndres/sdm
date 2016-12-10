@@ -21,13 +21,14 @@
 #include <array>
 #include <cmath>
 #include <bitset>
-#include <iostream>
+#include <memory>
 
 #include "./declares.h"
-#include "./utility.h"
+#include "utility/utility.h"
 
 using std::array;
 using std::bitset;
+using std::shared_ptr;
 
 namespace sdm {
 
@@ -54,26 +55,37 @@ class UpDownCounters {
    * @param updateFlags Array of boolean indicating whether to update.
    * @param bits Input bits.
    */
-  void insertData(const array<bool, HARD_LOCATION_COUNT>& updateFlags,
-                  const bitset<DATA_BIT_COUNT>& bits);
+  void write(const array<bool, HARD_LOCATION_COUNT>& updateFlags,
+             const bitset<DATA_BIT_COUNT>& bits);
 
   /**
    * Output the bits given an array of hamming distance.
    * @param updateFlags Array of boolean indicating whether to update.
    * @return The output.
    */
-  bitset<DATA_BIT_COUNT> getData(
+  bitset<DATA_BIT_COUNT> read(
     const array<bool, HARD_LOCATION_COUNT>& updateFlags) const;
 
  protected:
-  void _insertDataRow(const bitset<DATA_BIT_COUNT>& bits, size_t row);
+  void _writeRow(const bitset<DATA_BIT_COUNT>& bits, size_t row);
 
-  array<FLOAT, DATA_BIT_COUNT> _getData(size_t row) const;
+  array<FLOAT, DATA_BIT_COUNT> _readRow(size_t row) const;
 
  protected:
   FLOAT _geometricRatio;
   array<array<FLOAT, DATA_BIT_COUNT>, HARD_LOCATION_COUNT> _upDownCounters;
 };
+
+/*!\typedef spUpDownCounters
+ * \brief Wraps UpDownCounters with shared_ptr.
+ * \tparam DATA_BIT_COUNT Number of bit in data to be saved.
+ * \tparam HARD_LOCATION_BIT_COUNT Number of hard location bit.
+ */
+template <
+  size_t DATA_BIT_COUNT,
+  size_t HARD_LOCATION_BIT_COUNT>
+using spUpDownCounters =
+shared_ptr<UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>>;
 
 template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
 UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::UpDownCounters(
@@ -85,7 +97,7 @@ UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::UpDownCounters(
 }
 
 template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
-void UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::insertData(
+void UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::write(
   const array<
     bool,
     UpDownCounters<
@@ -94,14 +106,14 @@ void UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::insertData(
   const bitset<DATA_BIT_COUNT> &bits) {
   for (size_t i = 0; i < updateFlags.size(); i++) {
     if (updateFlags[i]) {
-      this->_insertDataRow(bits, i);
+      this->_writeRow(bits, i);
     }
   }
 }
 
 template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
 bitset<DATA_BIT_COUNT>
-UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::getData(
+UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::read(
   const array<
     bool,
     UpDownCounters<
@@ -111,7 +123,7 @@ UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::getData(
   sumArray.fill(0);
   for (size_t i = 0; i < updateFlags.size(); i++) {
     if (updateFlags[i]) {
-      sumArray = this->_getData(i) + sumArray;
+      sumArray = this->_readRow(i) + sumArray;
     }
   }
 
@@ -124,7 +136,7 @@ UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::getData(
 }
 
 template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
-void UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::_insertDataRow(
+void UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::_writeRow(
   const bitset<DATA_BIT_COUNT>& bits,
   size_t row) {
   array<FLOAT, DATA_BIT_COUNT>& rowUpDownCounters = _upDownCounters.at(row);
@@ -138,7 +150,7 @@ void UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::_insertDataRow(
 
 template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
 array<FLOAT, DATA_BIT_COUNT>
-UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::_getData(
+UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::_readRow(
   size_t row) const {
   array<FLOAT, DATA_BIT_COUNT> sumArray;
   sumArray.fill(0);

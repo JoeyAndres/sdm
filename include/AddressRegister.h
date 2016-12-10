@@ -24,11 +24,13 @@
 #include <array>
 #include <cmath>
 #include <iostream>
+#include <memory>
 
 #include "./declares.h"
 
 using std::bitset;
 using std::array;
+using std::shared_ptr;
 
 namespace sdm {
 
@@ -55,6 +57,8 @@ class AddressRegister {
    */
   hammingDistanceArray<HARD_LOCATION_COUNT> getHammingDistanceArray(
       const bitset<ADDRESS_BIT_COUNT>& bits) const;
+  hammingDistanceArray<HARD_LOCATION_COUNT> getHammingDistanceArray(
+    const mpz_class& bits) const;
 
   const array<mpz_class, HARD_LOCATION_COUNT>& getLocationAddresses() const;
   array<mpz_class, HARD_LOCATION_COUNT>& getLocationAddresses();
@@ -62,6 +66,15 @@ class AddressRegister {
  protected:
   array<mpz_class, HARD_LOCATION_COUNT> _locationAddresses;
 };
+
+/*!\typedef spAddressRegister
+ * \brief Wraps AddressRegister in shared_ptr.
+ * \tparam ADDRESS_BIT_COUNT The bit count of the address data.
+ * \tparam HARD_LOCATION_BIT_COUNT Hard location bit count.
+ */
+template<size_t ADDRESS_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
+using spAddressRegister =
+shared_ptr<AddressRegister<ADDRESS_BIT_COUNT, HARD_LOCATION_BIT_COUNT>>;
 
 template<size_t ADDRESS_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
 AddressRegister<ADDRESS_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::AddressRegister() {
@@ -100,6 +113,25 @@ AddressRegister<ADDRESS_BIT_COUNT,
        addrIndex < _locationAddresses.size();
        addrIndex++) {
     hda[addrIndex] = mpz_hamdist(mpBit.get_mpz_t(),
+                                 _locationAddresses[addrIndex].get_mpz_t());
+  }
+
+  return hda;
+}
+template<size_t ADDRESS_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
+hammingDistanceArray<
+  AddressRegister<ADDRESS_BIT_COUNT,
+                  HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT>
+  AddressRegister<ADDRESS_BIT_COUNT,
+                  HARD_LOCATION_BIT_COUNT>::getHammingDistanceArray(
+  const mpz_class& bits) const {
+  hammingDistanceArray<AddressRegister<
+    ADDRESS_BIT_COUNT,
+    HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT> hda;
+  for (size_t addrIndex = 0;
+       addrIndex < _locationAddresses.size();
+       addrIndex++) {
+    hda[addrIndex] = mpz_hamdist(bits.get_mpz_t(),
                                  _locationAddresses[addrIndex].get_mpz_t());
   }
 

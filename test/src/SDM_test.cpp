@@ -19,26 +19,31 @@
 #include <gmpxx.h>
 #include <array>
 #include <cmath>
-#include <cstdint>
-#include <iostream>
 
 #include "sdm"
 
 #include "catch.hpp"
 
-using std::array;
-
 union Converter { std::uint64_t i; double d; };
 
-SCENARIO("UpDownCounters data storage.",
-         "[sdm::UpDownCounters]") {
-  GIVEN("Instantiate 64 (double) bit to 2000 location addresses.") {
-    constexpr size_t hardLocationBitCount = 3;
-    sdm::UpDownCounters<64, hardLocationBitCount> upDownCounters(0.1F);
+SCENARIO("SDM read/write",
+         "[sdm::SDM]") {
+  GIVEN("Instantiate 256 bit address to hard 2000 location addresses and 64bit "
+          "data") {
+    constexpr size_t hardLocationBitCount = 11;
+    constexpr size_t addressBitCount = 64;
+    constexpr size_t dataBitCount = 64;
+    auto sparseDistributedSystem = sdm::SDMFactory<
+      addressBitCount,
+      hardLocationBitCount,
+      dataBitCount>(3).get();
 
     WHEN("Base case: When no insertion done.") {
       THEN("I get 0") {
-        auto acquiredData = upDownCounters.read({0, 1, 0, 0, 1, 0, 1, 0});
+        Converter c1;
+        c1.d = 1.0F;
+        auto acquiredData =
+          sparseDistributedSystem->read(c1.i);
         Converter c2;
         c2.i =  acquiredData.to_ullong();
         REQUIRE(c2.d == sdm::FLOAT(0.0F));
@@ -46,11 +51,12 @@ SCENARIO("UpDownCounters data storage.",
     }
 
     WHEN("Base case: When I set a memory to 1.") {
-      Converter c1;
-      c1.d = sdm::FLOAT(1.0F);
-      upDownCounters.write({0, 1, 0, 0, 1, 0, 1, 0}, c1.i);
       THEN("I get 1") {
-        auto acquiredData = upDownCounters.read({0, 1, 0, 0, 1, 0, 1, 0});
+        Converter c1;
+        c1.d = 1.0F;
+        sparseDistributedSystem->write(c1.i, c1.i);
+        auto acquiredData =
+          sparseDistributedSystem->read(c1.i);
         Converter c2;
         c2.i =  acquiredData.to_ullong();
         REQUIRE(c2.d == sdm::FLOAT(1.0F));
@@ -58,22 +64,25 @@ SCENARIO("UpDownCounters data storage.",
     }
 
     WHEN("I reinforced memory with -1 more often than 1.") {
-      constexpr size_t hardLocationBitCount = 3;
-      sdm::UpDownCounters<64, hardLocationBitCount> upDownCounters(0.1F);
-
       Converter c1;
-      c1.d = sdm::FLOAT(-1.0F);
-      upDownCounters.write({0, 1, 0, 0, 1, 0, 1, 0}, c1.i);
-      upDownCounters.write({0, 1, 0, 0, 1, 0, 1, 0}, c1.i);
+      c1.d = 1.0F;
+      Converter c2;
+      c2.d = -1.0F;
 
-      c1.d = sdm::FLOAT(1.0F);
-      upDownCounters.write({0, 1, 0, 0, 1, 0, 1, 0}, c1.i);
+      sparseDistributedSystem->write(c1.i, c1.i);
+      sparseDistributedSystem->write(c1.i, c1.i);
 
-      THEN("I get -1") {
-        auto acquiredData = upDownCounters.read({0, 1, 0, 0, 1, 0, 1, 0});
-        Converter c2;
-        c2.i =  acquiredData.to_ullong();
-        REQUIRE(c2.d == sdm::FLOAT(-1.0F));
+      sparseDistributedSystem->write(c1.i, c2.i);
+      sparseDistributedSystem->write(c1.i, c2.i);
+
+      auto acquiredData =
+        sparseDistributedSystem->read(c1.i);
+
+      Converter c3;
+      c3.i = acquiredData.to_ullong();
+
+      THEN("Then I get -1") {
+        REQUIRE(c3.d == sdm::FLOAT(-1.0F));
       }
     }
   }
