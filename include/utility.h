@@ -19,14 +19,29 @@
 #pragma once
 
 #include <array>
+#include <iostream>
 
 using std::array;
 
 namespace sdm {
 
-using FLOAT = double;
+template<typename T, size_t N>
+array<T, N> operator+(const array<T, N>& lhs, const array<T, N>& rhs) {
+  array<T, N> rv;
+  for (size_t i = 0; i < N; i++) {
+    rv[i] = lhs[i] + rhs[i];
+  }
 
-template<size_t N>
-using hammingDistanceArray = array<size_t, N>;
+  return rv;
+}
+
+template<typename T, size_t N>
+std::ostream& operator<<(std::ostream& os, const array<T, N>& op) {
+  for (size_t i = 0; i < N; i++) {
+    os << op[i] << " ";
+  }
+
+  return os;
+}
 
 }  // namespace sdm
