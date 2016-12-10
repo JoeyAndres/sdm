@@ -1,0 +1,31 @@
+{
+  "docker": {
+    "user": "yeojserdna"
+  },
+  "test": {
+    "env": {
+      "container-prefix": "sdm",
+      "linux": {
+        "dependencies": [
+          "emacs",
+          "openssh-server",
+          "git",
+          "make",
+          "cmake"
+        ],
+
+        "ubuntu": {
+          "dependencies": [
+            "g++"
+          ]
+        },
+
+        "centos": {
+          "dependencies": [
+            "gcc-c++"
+          ]
+        }
+      }
+    }
+  }
+}
