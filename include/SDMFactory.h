@@ -23,6 +23,7 @@
 #include "./utility/FactoryAbstract.h"
 #include "./declares.h"
 #include "AddressRegister.h"
+#include "AddressRegisterFactory.h"
 #include "SDM.h"
 #include "UpDownCounters.h"
 
