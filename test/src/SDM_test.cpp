@@ -17,8 +17,6 @@
  */
 
 #include <gmpxx.h>
-#include <array>
-#include <cmath>
 
 #include "sdm"
 
@@ -28,6 +26,36 @@ union Converter { std::uint64_t i; double d; };
 
 SCENARIO("SDM read/write",
          "[sdm::SDM]") {
+  GIVEN("Instantiate 4 bit address to hard 3 bit location addresses") {
+    constexpr size_t hardLocationBitCount = 3;
+    constexpr size_t addressBitCount = 4;
+    constexpr size_t dataBitCount = 4;
+    auto sparseDistributedSystem = sdm::SDMFactory<
+      addressBitCount,
+      hardLocationBitCount,
+      dataBitCount>(1).get();
+
+    WHEN("Base case: When no insertion done.") {
+      auto acquiredData =
+        sparseDistributedSystem->read(bitset<4>("1000"));
+      THEN("I get 0") {
+        REQUIRE(acquiredData == bitset<4>("0000"));
+      }
+    }
+
+    WHEN("Base case: When I set a memory to 1") {
+      auto addr1 = bitset<4>("1000");
+      auto data1 = bitset<4>("1001");
+      sparseDistributedSystem->write(addr1, data1);
+
+      REQUIRE(sparseDistributedSystem->read(addr1) == data1);
+
+      // Sanity check.
+      auto addr2 = ~addr1;
+      REQUIRE(sparseDistributedSystem->read(addr2) == bitset<4>("0000"));
+    }
+  }
+
   GIVEN("Instantiate 256 bit address to hard 2000 location addresses and 64bit "
           "data") {
     constexpr size_t hardLocationBitCount = 11;
@@ -36,7 +64,7 @@ SCENARIO("SDM read/write",
     auto sparseDistributedSystem = sdm::SDMFactory<
       addressBitCount,
       hardLocationBitCount,
-      dataBitCount>(3).get();
+      dataBitCount>(12).get();
 
     WHEN("Base case: When no insertion done.") {
       THEN("I get 0") {
@@ -53,13 +81,20 @@ SCENARIO("SDM read/write",
     WHEN("Base case: When I set a memory to 1.") {
       THEN("I get 1") {
         Converter c1;
-        c1.d = 1.0F;
+        c1.d = 2.0F;
         sparseDistributedSystem->write(c1.i, c1.i);
         auto acquiredData =
           sparseDistributedSystem->read(c1.i);
         Converter c2;
         c2.i =  acquiredData.to_ullong();
-        REQUIRE(c2.d == sdm::FLOAT(1.0F));
+        REQUIRE(c2.d == sdm::FLOAT(2.0F));
+
+        // Sanity check.
+        bitset<64> bitset1 = c1.i;
+        bitset<64> flipBit = ~bitset1;
+        auto acquiredFlippedData = sparseDistributedSystem->read(flipBit);
+        c2.i = acquiredFlippedData.to_ullong();
+        REQUIRE(c2.d == sdm::FLOAT(0.0F));
       }
     }
 
