@@ -17,7 +17,6 @@
  */
 
 #include <gmpxx.h>
-#include <array>
 #include <cmath>
 
 #include "sdm"
@@ -38,7 +37,7 @@ SCENARIO("Address register converts location addresses to hard location",
       mpz_class* lastAddress = &locationAddress.at(0);
 
       mpz_class offsetAdder;
-      mpz_ui_pow_ui(offsetAdder.get_mpz_t(), 2, hardLocationBitCount);
+      mpz_ui_pow_ui(offsetAdder.get_mpz_t(), 2, 256 - hardLocationBitCount);
 
       for (size_t addrIndex = 1;
            addrIndex < locationAddress.size();

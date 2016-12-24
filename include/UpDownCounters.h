@@ -22,6 +22,7 @@
 #include <cmath>
 #include <bitset>
 #include <memory>
+#include <iostream>
 
 #include "./declares.h"
 #include "utility/utility.h"
@@ -65,6 +66,12 @@ class UpDownCounters {
    */
   bitset<DATA_BIT_COUNT> read(
     const array<bool, HARD_LOCATION_COUNT>& updateFlags) const;
+
+  /**
+   * @return Counter grid.
+   */
+  const array<
+    array<FLOAT, DATA_BIT_COUNT>, HARD_LOCATION_COUNT>& getCounters() const;
 
  protected:
   void _writeRow(const bitset<DATA_BIT_COUNT>& bits, size_t row);
@@ -160,6 +167,29 @@ UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::_readRow(
   }
 
   return sumArray;
+}
+
+template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
+const array<
+  array<FLOAT, DATA_BIT_COUNT>,
+  UpDownCounters<
+    DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT>&
+UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::getCounters() const {
+  return _upDownCounters;
+}
+
+template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
+std::ostream& operator<<(
+  std::ostream& os,
+  const UpDownCounters<
+    DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>& upDownCounters) {
+  for (auto row : upDownCounters.getCounters()) {
+    for (auto col : row) {
+      os << col;
+    }
+    os << std::endl;
+  }
+  return os;
 }
 
 }  // namespace sdm

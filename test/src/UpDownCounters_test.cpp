@@ -54,6 +54,11 @@ SCENARIO("UpDownCounters data storage.",
         Converter c2;
         c2.i =  acquiredData.to_ullong();
         REQUIRE(c2.d == sdm::FLOAT(1.0F));
+
+        // Sanity check: The orthogonal update flags.
+        auto orthogonalData = upDownCounters.read({1, 0, 1, 1, 0, 1, 0, 1});
+        c2.i = orthogonalData.to_ullong();
+        REQUIRE(c2.d == sdm::FLOAT(0.0F));
       }
     }
 

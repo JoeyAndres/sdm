@@ -86,7 +86,10 @@ AddressRegister<ADDRESS_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::AddressRegister() {
   mpz_class* lastAddress = &_locationAddresses.at(0);
 
   mpz_class offsetAdder;
-  mpz_ui_pow_ui(offsetAdder.get_mpz_t(), 2, HARD_LOCATION_BIT_COUNT);
+  mpz_ui_pow_ui(
+    offsetAdder.get_mpz_t(),
+    2,
+    ADDRESS_BIT_COUNT - HARD_LOCATION_BIT_COUNT);
 
   for (size_t addrIndex = 1;
        addrIndex < _locationAddresses.size();
@@ -105,18 +108,7 @@ AddressRegister<ADDRESS_BIT_COUNT,
   const bitset<ADDRESS_BIT_COUNT>& bits) const {
   auto bitStr = bits.to_string();
   mpz_class mpBit(bitStr, 2);
-
-  hammingDistanceArray<AddressRegister<
-    ADDRESS_BIT_COUNT,
-    HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT> hda;
-  for (size_t addrIndex = 0;
-       addrIndex < _locationAddresses.size();
-       addrIndex++) {
-    hda[addrIndex] = mpz_hamdist(mpBit.get_mpz_t(),
-                                 _locationAddresses[addrIndex].get_mpz_t());
-  }
-
-  return hda;
+  return getHammingDistanceArray(mpBit);
 }
 template<size_t ADDRESS_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
 hammingDistanceArray<

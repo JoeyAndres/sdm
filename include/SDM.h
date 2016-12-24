@@ -18,7 +18,6 @@
 
 #pragma once
 
-#include <gmpxx.h>
 #include <memory>
 
 #include "./declares.h"
@@ -64,7 +63,26 @@ class SDM {
     const bitset<ADDRESS_BIT_COUNT>& address,
     const bitset<DATA_BIT_COUNT> &data);
 
+  /**
+   * Reads data from locations selected by address
+   * @param address
+   * @return data
+   */
   bitset<DATA_BIT_COUNT> read(const bitset<ADDRESS_BIT_COUNT>& address) const;
+
+ protected:
+  /**
+   * Returns an array of boolean corresponding to each address. True if
+   * to update the counter, false otherwise.
+   * @param address
+   * @return Update flags.
+   */
+  array<
+    bool,
+    UpDownCounters<
+      DATA_BIT_COUNT,
+      HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT> _getUpdateFlags(
+    const bitset<ADDRESS_BIT_COUNT>& address) const;
 
  protected:
   spAddressRegister<ADDRESS_BIT_COUNT, HARD_LOCATION_BIT_COUNT>
@@ -106,20 +124,7 @@ void SDM<
   DATA_BIT_COUNT>::write(
   const bitset<ADDRESS_BIT_COUNT> &address,
   const bitset<DATA_BIT_COUNT> &data) {
-  mpz_class addressMPZ(address.to_string(), 2);
-  auto hammingDistances =
-    _addressRegister->getHammingDistanceArray(addressMPZ);
-
-  array<
-    bool,
-    UpDownCounters<
-      DATA_BIT_COUNT,
-      HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT> updateFlags;
-
-  for (size_t i = 0; i < hammingDistances.size(); i++) {
-    updateFlags[i] = hammingDistances[i] >= _threshold;
-  }
-
+  auto updateFlags = _getUpdateFlags(address);
   _upDownCounters->write(updateFlags, data);
 }
 
@@ -132,9 +137,26 @@ SDM<
   ADDRESS_BIT_COUNT,
   HARD_LOCATION_BIT_COUNT,
   DATA_BIT_COUNT>::read(const bitset<ADDRESS_BIT_COUNT> &address) const {
-  mpz_class addressMPZ(address.to_string(), 2);
+  auto updateFlags = _getUpdateFlags(address);
+  return _upDownCounters->read(updateFlags);
+}
+
+template <
+  size_t ADDRESS_BIT_COUNT,
+  size_t HARD_LOCATION_BIT_COUNT,
+  size_t DATA_BIT_COUNT>
+array<
+  bool,
+  UpDownCounters<
+    DATA_BIT_COUNT,
+    HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT>
+SDM<
+  ADDRESS_BIT_COUNT,
+  HARD_LOCATION_BIT_COUNT,
+  DATA_BIT_COUNT>::_getUpdateFlags(
+  const bitset<ADDRESS_BIT_COUNT> &address) const {
   auto hammingDistances =
-    _addressRegister->getHammingDistanceArray(addressMPZ);
+    _addressRegister->getHammingDistanceArray(address);
 
   array<
     bool,
@@ -143,10 +165,24 @@ SDM<
       HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT> updateFlags;
 
   for (size_t i = 0; i < hammingDistances.size(); i++) {
-    updateFlags[i] = hammingDistances[i] >= _threshold;
+    updateFlags[i] = hammingDistances[i] <= _threshold;
   }
 
-  return _upDownCounters->read(updateFlags);
+  return updateFlags;
+}
+
+template <
+  size_t ADDRESS_BIT_COUNT,
+  size_t HARD_LOCATION_BIT_COUNT,
+  size_t DATA_BIT_COUNT>
+std::ostream& operator<<(
+  std::ostream& os,
+  const SDM<
+    ADDRESS_BIT_COUNT,
+    HARD_LOCATION_BIT_COUNT,
+    DATA_BIT_COUNT>& sdm) {
+  os << (*sdm._upDownCounters);
+  return os;
 }
 
 }  // namespace sdm
