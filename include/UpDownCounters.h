@@ -23,6 +23,7 @@
 #include <bitset>
 #include <memory>
 #include <iostream>
+#include <cstdint>
 
 #include "./declares.h"
 #include "utility/utility.h"
@@ -32,6 +33,8 @@ using std::bitset;
 using std::shared_ptr;
 
 namespace sdm {
+
+using COUNTER_TYPE = int64_t;
 
 /*!\class UpDownCounters
  * \brief Updown counters for sdm.
@@ -71,16 +74,18 @@ class UpDownCounters {
    * @return Counter grid.
    */
   const array<
-    array<FLOAT, DATA_BIT_COUNT>, HARD_LOCATION_COUNT>& getCounters() const;
+    array<
+      COUNTER_TYPE, DATA_BIT_COUNT>, HARD_LOCATION_COUNT>& getCounters() const;
 
  protected:
   void _writeRow(const bitset<DATA_BIT_COUNT>& bits, size_t row);
 
-  array<FLOAT, DATA_BIT_COUNT> _readRow(size_t row) const;
+  array<COUNTER_TYPE, DATA_BIT_COUNT> _readRow(size_t row) const;
 
  protected:
   FLOAT _geometricRatio;
-  array<array<FLOAT, DATA_BIT_COUNT>, HARD_LOCATION_COUNT> _upDownCounters;
+  array<
+    array<COUNTER_TYPE, DATA_BIT_COUNT>, HARD_LOCATION_COUNT> _upDownCounters;
 };
 
 /*!\typedef spUpDownCounters
@@ -98,7 +103,7 @@ template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
 UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::UpDownCounters(
   FLOAT geometricRatio) :
   _geometricRatio(geometricRatio) {
-  for (array<FLOAT, DATA_BIT_COUNT>& udc : _upDownCounters) {
+  for (array<COUNTER_TYPE, DATA_BIT_COUNT>& udc : _upDownCounters) {
     udc.fill(0);
   }
 }
@@ -126,7 +131,7 @@ UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::read(
     UpDownCounters<
       DATA_BIT_COUNT,
       HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT>& updateFlags) const {
-  array<FLOAT, DATA_BIT_COUNT> sumArray;
+  array<COUNTER_TYPE , DATA_BIT_COUNT> sumArray;
   sumArray.fill(0);
   for (size_t i = 0; i < updateFlags.size(); i++) {
     if (updateFlags[i]) {
@@ -146,20 +151,19 @@ template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
 void UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::_writeRow(
   const bitset<DATA_BIT_COUNT>& bits,
   size_t row) {
-  array<FLOAT, DATA_BIT_COUNT>& rowUpDownCounters = _upDownCounters.at(row);
+  array<
+    COUNTER_TYPE, DATA_BIT_COUNT>& rowUpDownCounters = _upDownCounters.at(row);
   for (size_t i = 0; i < bits.size(); i++) {
-    FLOAT direction = bits[i] ? 1.0F : -1.0F;
-    rowUpDownCounters.at(i) =
-      rowUpDownCounters.at(i) +
-        _geometricRatio * (direction - rowUpDownCounters.at(i));
+    COUNTER_TYPE direction = bits[i] ? 1 : -1;
+    rowUpDownCounters.at(i) += direction;
   }
 }
 
 template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
-array<FLOAT, DATA_BIT_COUNT>
+array<COUNTER_TYPE , DATA_BIT_COUNT>
 UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::_readRow(
   size_t row) const {
-  array<FLOAT, DATA_BIT_COUNT> sumArray;
+  array<COUNTER_TYPE, DATA_BIT_COUNT> sumArray;
   sumArray.fill(0);
   auto rowUpDownCounters = _upDownCounters.at(row);
   for (size_t i = 0; i < rowUpDownCounters.size(); i++) {
@@ -171,7 +175,7 @@ UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::_readRow(
 
 template <size_t DATA_BIT_COUNT, size_t HARD_LOCATION_BIT_COUNT>
 const array<
-  array<FLOAT, DATA_BIT_COUNT>,
+  array<COUNTER_TYPE, DATA_BIT_COUNT>,
   UpDownCounters<
     DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::HARD_LOCATION_COUNT>&
 UpDownCounters<DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::getCounters() const {
@@ -185,7 +189,7 @@ std::ostream& operator<<(
     DATA_BIT_COUNT, HARD_LOCATION_BIT_COUNT>& upDownCounters) {
   for (auto row : upDownCounters.getCounters()) {
     for (auto col : row) {
-      os << col;
+      os << col << " ";
     }
     os << std::endl;
   }

@@ -19,6 +19,8 @@
 #pragma once
 
 #include <memory>
+#include <string>
+#include <fstream>
 
 #include "./declares.h"
 #include "utility/utility.h"
@@ -69,6 +71,20 @@ class SDM {
    * @return data
    */
   bitset<DATA_BIT_COUNT> read(const bitset<ADDRESS_BIT_COUNT>& address) const;
+
+  /**
+   * Serializing Up/Down counter. Useful for debugging.
+   * @param filePath Path of the file to write the serialize Up/Down counter.
+   */
+  void serialize(const std::string& filePath) const;
+
+  friend std::ostream& operator<<(
+    std::ostream& os,
+    const SDM<
+      ADDRESS_BIT_COUNT, HARD_LOCATION_BIT_COUNT, DATA_BIT_COUNT>& sdm) {
+    os << (*sdm._upDownCounters);
+    return os;
+  }
 
  protected:
   /**
@@ -124,6 +140,8 @@ void SDM<
   DATA_BIT_COUNT>::write(
   const bitset<ADDRESS_BIT_COUNT> &address,
   const bitset<DATA_BIT_COUNT> &data) {
+  auto hammingDistances =
+    _addressRegister->getHammingDistanceArray(address);
   auto updateFlags = _getUpdateFlags(address);
   _upDownCounters->write(updateFlags, data);
 }
@@ -175,14 +193,18 @@ template <
   size_t ADDRESS_BIT_COUNT,
   size_t HARD_LOCATION_BIT_COUNT,
   size_t DATA_BIT_COUNT>
-std::ostream& operator<<(
-  std::ostream& os,
-  const SDM<
-    ADDRESS_BIT_COUNT,
+void
+SDM<ADDRESS_BIT_COUNT,
     HARD_LOCATION_BIT_COUNT,
-    DATA_BIT_COUNT>& sdm) {
-  os << (*sdm._upDownCounters);
-  return os;
+    DATA_BIT_COUNT>::serialize(
+  const std::string& filePath) const {
+  std::ofstream file(filePath);
+  if (file.is_open()) {
+    file << *this << std::endl;
+    file.close();
+  } else {
+    std::cerr << "Unable to open file." << std::endl;
+  }
 }
 
 }  // namespace sdm

@@ -5,4 +5,4 @@ include_directories(${PROJECT_BINARY_DIR})
 file(GLOB_RECURSE SRC_TEST_FILES "src/*.cpp")
 
 add_executable(testRunner testRunner.cpp ${SRC_TEST_FILES})
-target_link_libraries(testRunner gmpxx gmp)
+target_link_libraries(testRunner sdm)

@@ -85,17 +85,15 @@ AddressRegister<ADDRESS_BIT_COUNT, HARD_LOCATION_BIT_COUNT>::AddressRegister() {
 
   mpz_class* lastAddress = &_locationAddresses.at(0);
 
-  mpz_class offsetAdder;
-  mpz_ui_pow_ui(
-    offsetAdder.get_mpz_t(),
-    2,
-    ADDRESS_BIT_COUNT - HARD_LOCATION_BIT_COUNT);
+  gmp_randstate_t gmp_randstate;
+  gmp_randinit_default(gmp_randstate);
+  gmp_randseed_ui(gmp_randstate, 0);
 
   for (size_t addrIndex = 1;
        addrIndex < _locationAddresses.size();
        addrIndex++) {
-    _locationAddresses.at(addrIndex) = *lastAddress + offsetAdder;
-    lastAddress = &_locationAddresses.at(addrIndex);
+    mpz_urandomb(lastAddress->get_mpz_t(), gmp_randstate, ADDRESS_BIT_COUNT);
+    _locationAddresses.at(addrIndex) = *lastAddress;
   }
 }
 

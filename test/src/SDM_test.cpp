@@ -56,15 +56,15 @@ SCENARIO("SDM read/write",
     }
   }
 
-  GIVEN("Instantiate 256 bit address to hard 2000 location addresses and 64bit "
+  GIVEN("Instantiate 64 bit address to hard 2000 location addresses and 64bit "
           "data") {
-    constexpr size_t hardLocationBitCount = 11;
+    constexpr size_t hardLocationBitCount = 10;
     constexpr size_t addressBitCount = 64;
     constexpr size_t dataBitCount = 64;
     auto sparseDistributedSystem = sdm::SDMFactory<
       addressBitCount,
       hardLocationBitCount,
-      dataBitCount>(12).get();
+      dataBitCount>(32).get();
 
     WHEN("Base case: When no insertion done.") {
       THEN("I get 0") {
@@ -78,7 +78,7 @@ SCENARIO("SDM read/write",
       }
     }
 
-    WHEN("Base case: When I set a memory to 1.") {
+    WHEN("Base case: When I set a memory to 2.") {
       THEN("I get 1") {
         Converter c1;
         c1.d = 2.0F;
@@ -92,6 +92,7 @@ SCENARIO("SDM read/write",
         // Sanity check.
         bitset<64> bitset1 = c1.i;
         bitset<64> flipBit = ~bitset1;
+        sparseDistributedSystem->write(flipBit, sdm::FLOATToBitset(0.0F));
         auto acquiredFlippedData = sparseDistributedSystem->read(flipBit);
         c2.i = acquiredFlippedData.to_ullong();
         REQUIRE(c2.d == sdm::FLOAT(0.0F));
@@ -109,6 +110,7 @@ SCENARIO("SDM read/write",
 
       sparseDistributedSystem->write(c1.i, c2.i);
       sparseDistributedSystem->write(c1.i, c2.i);
+      sparseDistributedSystem->write(c1.i, c2.i);
 
       auto acquiredData =
         sparseDistributedSystem->read(c1.i);
@@ -118,6 +120,54 @@ SCENARIO("SDM read/write",
 
       THEN("Then I get -1") {
         REQUIRE(c3.d == sdm::FLOAT(-1.0F));
+      }
+    }
+  }
+
+  GIVEN("Instantiate 192 bit (3 float) address to hard 2000 location addresses "
+          "and 64bit data") {
+    constexpr size_t hardLocationBitCount = 18;
+    constexpr size_t addressBitCount = 192;
+    constexpr size_t dataBitCount = 64;
+    auto sparseDistributedSystem = sdm::SDMFactory<
+      addressBitCount,
+      hardLocationBitCount,
+      dataBitCount>(68).get();
+
+    sdm::floatArray<3> floatArray1 { 0.1F, 0.2F, 0.3F };
+    sdm::floatArray<3> floatArray2 { 10.2F, -3000.2F, 100.0F };
+
+    auto addr1 = sdm::floatArrayToBitset(floatArray1);
+    auto addr2 = sdm::floatArrayToBitset(floatArray2);
+
+    WHEN("Nothing is written") {
+      THEN("I should retrieve zero.") {
+        REQUIRE(sdm::bitsetToFLOAT(sparseDistributedSystem->read(addr1)) ==
+          0.0F);
+        REQUIRE(sdm::bitsetToFLOAT(sparseDistributedSystem->read(addr2)) ==
+          0.0F);
+      }
+    }
+
+    WHEN("I associate floatArray1 and value 2.0F") {
+      sparseDistributedSystem->write(addr1, sdm::FLOATToBitset(2.0F));
+      sparseDistributedSystem->write(addr2, sdm::FLOATToBitset(0.0F));
+      THEN("I should be able to retrieve 2.0 back.") {
+        REQUIRE(sdm::bitsetToFLOAT(sparseDistributedSystem->read(addr1)) ==
+          2.0F);
+        REQUIRE(sdm::bitsetToFLOAT(sparseDistributedSystem->read(addr2)) ==
+          0.0F);
+      }
+    }
+
+    WHEN("I associate floatArray2 and value -69") {
+      sparseDistributedSystem->write(addr1, sdm::FLOATToBitset(2.0F));
+      sparseDistributedSystem->write(addr2, sdm::FLOATToBitset(-69.0F));
+      THEN("I should be able to retrieve -69 back.") {
+        REQUIRE(sdm::bitsetToFLOAT(sparseDistributedSystem->read(addr1)) ==
+          2.0F);
+        REQUIRE(sdm::bitsetToFLOAT(sparseDistributedSystem->read(addr2)) ==
+          -69.0F);
       }
     }
   }

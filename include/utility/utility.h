@@ -20,11 +20,23 @@
 
 #include <array>
 #include <iostream>
+#include <bitset>
+
+#include "../declares.h"
 
 using std::array;
+using std::bitset;
 
 namespace sdm {
 
+/**
+ * Adds each corresponding elements of array of the same size.
+ * @tparam T Data type of elements in array.
+ * @tparam N Size of array.
+ * @param lhs LHS array.
+ * @param rhs RHS array.
+ * @return Array in which corresponding elements are added.
+ */
 template<typename T, size_t N>
 array<T, N> operator+(const array<T, N>& lhs, const array<T, N>& rhs) {
   array<T, N> rv;
@@ -35,6 +47,14 @@ array<T, N> operator+(const array<T, N>& lhs, const array<T, N>& rhs) {
   return rv;
 }
 
+/**
+ * Stream for array. For debugging purposes.
+ * @tparam T Data type of elements in array.
+ * @tparam N Size of array.
+ * \param os stream.
+ * \param op array.
+ * @return stream.
+ */
 template<typename T, size_t N>
 std::ostream& operator<<(std::ostream& os, const array<T, N>& op) {
   for (size_t i = 0; i < N; i++) {
@@ -42,6 +62,43 @@ std::ostream& operator<<(std::ostream& os, const array<T, N>& op) {
   }
 
   return os;
+}
+
+/**
+ * Converts a float to bitset.
+ * @param f Floating point.
+ * @return bitset equivalent of the given f.
+ */
+bitset<FLOAT_SIZE> FLOATToBitset(FLOAT f);
+
+/**
+ * Converts a bitset of size FLOAT_SIZE to FLOAT.
+ * @param bitset The bitset version of float.
+ * @return Float equivalent of the bitset.
+ */
+FLOAT bitsetToFLOAT(const bitset<FLOAT_SIZE>& bitset);
+
+/**
+ * Converts a floatArray to a bitset.
+ * @tparam D Number of elements in the floatArray.
+ * @param fv FloatArray.
+ * @return Converted fv to bitset.
+ */
+template <size_t D>
+bitset<D * FLOAT_SIZE> floatArrayToBitset(const floatArray<D>& fv) {
+  bitset<D * FLOAT_SIZE> rv;
+  union Converter { FLOAT f; uint64_t i; };
+  for (size_t d = 0; d < D; d++) {
+    size_t dRev = (D - 1) - d;
+    Converter c;
+    c.f = fv[d];
+    bitset<FLOAT_SIZE> tempBitset = c.i;
+
+    for (size_t b = 0; b < tempBitset.size(); b++) {
+      rv[FLOAT_SIZE * dRev + b] = tempBitset[b];
+    }
+  }
+  return rv;
 }
 
 }  // namespace sdm
