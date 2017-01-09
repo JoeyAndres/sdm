@@ -1,10 +1,6 @@
 # sparse-distributed-memory
 Sparse distributed memory, aka Kanerva Coding.
 
-# No Overflow!!
-This utilizes geometric series and floats for the counters so NO Overflow!! Write
-as many times as you want and don't worry!
-
 # Compilation and Installation
 
 ### Dependency
